@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0c1525" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FrameCalc" />
+  <meta name="description" content="縦横画素数の計算・アスペクト比固定・3分割構図ガイド。オフラインでも使えるスマホ向けツール。" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <title>FrameCalc｜縦横画素・3分割ガイド</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1424; --surface:#152136; --panel:#18263d; --line:#34445b; --txt:#f4f7fb; --muted:#a6b7cb; --accent:#70e2cb; --accent-dark:#0b3936; --warning:#ffd38e; }
+    * {box-sizing:border-box}
+    html {font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif; -webkit-text-size-adjust:100%}
+    body {margin:0;background:linear-gradient(170deg,#0e1b2d,#090f1c 75%);color:var(--txt);min-height:100dvh;}
+    body:before {content:"";position:fixed;inset:0 0 auto;height:290px;pointer-events:none;background:radial-gradient(ellipse at 70% 0%,rgba(76,151,168,.12),transparent 70%)}
+    .app {max-width:650px;margin:auto;padding:calc(17px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));position:relative;}
+    header {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px;}
+    .brand {display:flex;gap:11px;align-items:center;}
+    .logo {width:42px;height:42px;border-radius:12px;background:#173947;display:grid;place-items:center;border:1px solid #397987;flex:none;}
+    .logo svg {width:28px;height:28px}
+    h1 {font-size:21px;line-height:1.1;letter-spacing:.01em;margin:0;}
+    .subtitle {font-size:11px;color:var(--muted);margin-top:5px;}
+    .v {border:1px solid var(--line);color:var(--muted);font-size:11px;padding:5px 9px;border-radius:20px}
+    .card {background:rgba(22,34,54,.9);border:1px solid #34445b;border-radius:18px;padding:17px;margin-bottom:13px;box-shadow:0 5px 16px rgba(0,0,0,.08);}
+    .section-head {display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;}
+    .section-head h2 {margin:0;font-size:15px;font-weight:740;}
+    .helper {color:var(--muted);font-size:11px;}
+    .chipline {display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:1px 0 4px;margin:0 -1px 12px;}
+    .chipline::-webkit-scrollbar{display:none}
+    button {font:inherit;cursor:pointer;touch-action:manipulation;}
+    .chip {color:#d8e2ef;background:#1e314b;border:1px solid #3c516b;border-radius:11px;padding:10px 12px;white-space:nowrap;font-size:13px;font-weight:650;flex:none;min-height:42px;}
+    .chip.active {border-color:var(--accent);background:#183c43;color:#a6ffee}
+    .fields {display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:9px;margin-top:5px;}
+    .field {min-width:0;}
+    .field label {display:block;color:#c0cfe0;font-size:12px;margin:0 0 7px 2px;}
+    .inputwrap {display:flex;align-items:center;gap:4px;border:1px solid #4b607b;border-radius:12px;background:#0b1729;padding:0 10px;height:52px;}
+    .inputwrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(112,226,203,.10)}
+    input[type="number"] {width:100%;min-width:0;background:none;border:none;outline:none;color:var(--txt);font-size:23px;font-weight:730;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield;}
+    input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+    .px {font-size:12px;color:var(--muted)}
+    .swap {height:52px;width:37px;border:1px solid #415871;color:#e5f1fc;background:#25364e;border-radius:10px;font-size:23px;line-height:1;}
+    .line-info {font-size:12px;color:var(--muted);line-height:1.5;margin:12px 2px 0;}
+    .preset {display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:3px;margin-top:12px;}
+    .preset::-webkit-scrollbar{display:none}
+    .preset button {white-space:nowrap;border:1px solid #334d62;background:#132b3b;color:#b9d2df;padding:8px 11px;border-radius:9px;font-size:12px;min-height:34px;flex:none;}
+    .preview-outer {background:#0b1726;border:1px solid #293e55;border-radius:15px;padding:12px 8px;overflow:hidden;}
+    .preview-area {width:100%;display:flex;align-items:center;justify-content:center;min-height:165px;}
+    .frame {position:relative;flex:none;overflow:hidden;background:linear-gradient(160deg,#7496aa 0%,#456b82 55%,#263e54 56%,#203044 100%);outline:1px solid #93b3c2;box-shadow:0 8px 19px rgba(0,0,0,.2)}
+    .frame:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(8,15,25,.08),transparent 30%,rgba(8,15,25,.08));}
+    .frame img {position:absolute;width:100%;height:100%;inset:0;object-fit:cover;z-index:1;}
+    .frame-tag {position:absolute;left:10px;bottom:10px;font-size:10px;letter-spacing:.13em;color:white;background:rgba(5,17,30,.6);border-radius:4px;padding:4px 6px;z-index:2;}
+    .guides {position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;}
+    .guides line,.guides rect{vector-effect:non-scaling-stroke;}
+    .guide-grid {stroke:rgba(255,255,255,.87);stroke-width:1.3}
+    .guide-center{stroke:#ffd38e;stroke-width:1.2;stroke-dasharray:7 5}
+    .guide-safe{fill:none;stroke:#71f8d9;stroke-width:1.5}
+    .frame-size {text-align:center;margin-top:10px;font-weight:720;font-size:14px;font-variant-numeric:tabular-nums}
+    .toggle-list {display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+    .toggle {display:flex;align-items:center;gap:7px;background:#23364c;border:1px solid #3d5168;border-radius:10px;padding:10px 11px;font-size:12px;color:#f0f5fc;cursor:pointer;min-height:42px;}
+    .toggle input{accent-color:var(--accent);width:17px;height:17px;margin:0;}
+    .splitdata {display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px;}
+    .metric {border:1px solid #32495f;border-radius:12px;background:#112339;padding:12px;min-width:0;}
+    .metric-label {color:var(--muted);font-size:11px;margin-bottom:6px;}
+    .metric-value {font-size:17px;font-weight:750;letter-spacing:-.02em;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+    .metric-foot {font-size:10px;color:#94a9bf;margin-top:4px;}
+    .actions {display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px;}
+    .btn {border:1px solid #456276;background:#1d3449;color:#f2f9ff;border-radius:12px;padding:12px 10px;min-height:49px;font-size:13px;font-weight:750;}
+    .btn.primary {background:#78e7d0;color:#0b2930;border-color:#78e7d0;}
+    .image-row {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;}
+    .file-button {display:inline-flex;gap:7px;align-items:center;justify-content:center;border:1px solid #52667c;border-radius:10px;padding:10px 12px;color:#e8f1fc;background:#23354a;font-size:12px;cursor:pointer;}
+    .image-row input {display:none}
+    .linkbtn {background:none;border:none;color:#97dddf;text-decoration:underline;padding:9px 4px;font-size:12px;}
+    .notice {color:var(--muted);font-size:11px;line-height:1.7;margin:11px 2px 0;}
+    #toast {position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(25px);opacity:0;pointer-events:none;background:#e1fff5;color:#09352d;padding:11px 16px;border-radius:11px;font-size:13px;font-weight:700;box-shadow:0 7px 28px rgba(0,0,0,.4);transition:opacity .18s,transform .18s;white-space:nowrap;z-index:20}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    footer{text-align:center;color:#889bb0;font-size:11px;padding-top:4px;line-height:1.8;}
+    @media(min-width:540px) {.app{padding-left:28px;padding-right:28px}.card{padding:21px}.preview-area{min-height:230px}}
+    @media(max-width:355px){.app{padding-left:11px;padding-right:11px}.card{padding:13px}.metric-value{font-size:15px}.fields{gap:5px}.inputwrap{padding:0 7px}input[type="number"]{font-size:20px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="5" stroke="#7debd2" stroke-width="2"/><path d="M11.33 3V29M20.67 3V29M3 11.33H29M3 20.67H29" stroke="#7debd2" stroke-width="1.5"/></svg></div><div><h1>FrameCalc</h1><div class="subtitle">縦横画素計算 ＋ 構図ガイド</div></div></div><span class="v">v1.0</span>
+  </header>
+  <section class="card" aria-labelledby="resolution-title">
+    <div class="section-head"><h2 id="resolution-title">01 / 画面サイズ</h2><span class="helper">比率を固定して自動計算</span></div>
+    <div id="ratios" class="chipline" aria-label="アスペクト比">
+      <button class="chip active" data-ratio="16:9" type="button">16:9</button><button class="chip" data-ratio="9:16" type="button">9:16</button><button class="chip" data-ratio="4:3" type="button">4:3</button><button class="chip" data-ratio="3:2" type="button">3:2</button><button class="chip" data-ratio="1:1" type="button">1:1</button><button class="chip" data-ratio="free" type="button">自由</button>
+    </div>
+    <div class="fields">
+      <div class="field"><label for="width">横幅（px）</label><div class="inputwrap"><input id="width" type="number" inputmode="numeric" min="1" max="16384" value="1920" aria-label="横幅ピクセル"/><span class="px">px</span></div></div>
+      <button id="swap" class="swap" type="button" title="縦横を入れ替える" aria-label="縦横を入れ替える">⇄</button>
+      <div class="field"><label for="height">縦幅（px）</label><div class="inputwrap"><input id="height" type="number" inputmode="numeric" min="1" max="16384" value="1080" aria-label="縦幅ピクセル"/><span class="px">px</span></div></div>
+    </div>
+    <div class="line-info" id="ratio-note">横幅または縦幅を変更すると、もう一方を自動計算します。</div>
+    <div class="preset" aria-label="解像度プリセット">
+      <button type="button" data-size="1280,720">HD 720p</button><button type="button" data-size="1920,1080">FHD 1080p</button><button type="button" data-size="2048,1152">2048 × 1152</button><button type="button" data-size="3840,2160">4K UHD</button><button type="button" data-size="1080,1920">縦型 FHD</button>
+    </div>
+  </section>
+  <section class="card" aria-labelledby="preview-title">
+    <div class="section-head"><h2 id="preview-title">02 / 構図プレビュー</h2><span class="helper" id="ratio-display">16:9</span></div>
+    <div class="preview-outer"><div class="preview-area" id="preview-area">
+      <div class="frame" id="frame" style="width:100%;aspect-ratio:16/9">
+        <img id="reference-image" alt="読み込んだ背景画像" hidden />
+        <div class="frame-tag" id="frame-tag">PREVIS</div>
+        <svg class="guides" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+          <g id="thirds" class="guide-grid"><line x1="333.333" y1="0" x2="333.333" y2="1000"/><line x1="666.667" y1="0" x2="666.667" y2="1000"/><line x1="0" y1="333.333" x2="1000" y2="333.333"/><line x1="0" y1="666.667" x2="1000" y2="666.667"/></g>
+          <g id="centers" class="guide-center" hidden><line x1="500" y1="0" x2="500" y2="1000"/><line x1="0" y1="500" x2="1000" y2="500"/></g>
+          <rect id="safebox" class="guide-safe" x="50" y="50" width="900" height="900" hidden />
+        </svg>
+      </div>
+    </div><div id="size-label" class="frame-size">1,920 × 1,080 px</div></div>
+    <div class="toggle-list">
+      <label class="toggle"><input id="thirds-check" type="checkbox" checked/>3分割ライン</label>
+      <label class="toggle"><input id="center-check" type="checkbox"/>センターライン</label>
+      <label class="toggle"><input id="safe-check" type="checkbox"/>セーフエリア 5%</label>
+    </div>
+    <div class="image-row">
+      <label class="file-button" for="image-file">▧　画像を重ねて確認</label><input id="image-file" type="file" accept="image/*" />
+      <button id="remove-image" type="button" class="linkbtn" hidden>画像を外す</button>
+    </div>
+    <div class="notice">画像の読み込みは端末内のみ。画面比率が異なる場合、プレビューは中央でトリミング表示します。元画像は変更しません。</div>
+  </section>
+  <section class="card" aria-labelledby="calculate-title">
+    <div class="section-head"><h2 id="calculate-title">03 / 計算結果</h2><span class="helper">1/3・2/3の座標</span></div>
+    <div class="splitdata">
+      <div class="metric"><div class="metric-label">縦ライン X 座標</div><div class="metric-value" id="x-lines">640 / 1,280</div><div class="metric-foot">左端からの位置（px）</div></div>
+      <div class="metric"><div class="metric-label">横ライン Y 座標</div><div class="metric-value" id="y-lines">360 / 720</div><div class="metric-foot">上端からの位置（px）</div></div>
+      <div class="metric"><div class="metric-label">総画素数</div><div class="metric-value" id="megapixels">2.07 MP</div><div class="metric-foot" id="pixel-count">2,073,600 px</div></div>
+      <div class="metric"><div class="metric-label">実際の縦横比</div><div class="metric-value" id="actual-ratio">16:9</div><div class="metric-foot" id="scale-note">横 : 縦</div></div>
+    </div>
+    <div class="actions">
+      <button id="copy" type="button" class="btn">計算結果をコピー</button>
+      <button id="export" type="button" class="btn primary">ガイドPNGを保存</button>
+    </div>
+    <p class="notice">透明なPNGのガイド画像を、指定した実解像度で書き出します。Photopeaなどで最上位レイヤーに置いて使えます。</p>
+  </section>
+  <footer>オフライン動作対応 ・ 計算・画像処理は端末内で完結<br/>FrameCalc / standalone utility</footer>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const keys = ['width','height','ratio','thirds','center','safe'];
+const state = {width:1920,height:1080,ratio:'16:9',thirds:true,center:false,safe:false};
+try {const saved=JSON.parse(localStorage.getItem('framecalc-v1')||'null'); if(saved){for(const k of keys){if(Object.prototype.hasOwnProperty.call(saved,k)) state[k]=saved[k];}}} catch(_){}
+const finite = v=> Number.isFinite(Number(v)) && Number(v)>0;
+const clamp = v=>Math.max(1,Math.min(16384,Math.round(Number(v)||1)));
+state.width=clamp(state.width);state.height=clamp(state.height);
+if(!['16:9','9:16','4:3','3:2','1:1','free'].includes(state.ratio))state.ratio='free';
+const ratioNum = r => {if(r==='free')return null; const [a,b]=r.split(':').map(Number);return a/b;};
+const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:2});
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const toast=(msg)=>{const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2400)};
+let previewURL=null;
+function sync(){
+  $('width').value=state.width;$('height').value=state.height;
+  document.querySelectorAll('[data-ratio]').forEach(b=>{b.classList.toggle('active',b.dataset.ratio===state.ratio);b.setAttribute('aria-pressed',String(b.dataset.ratio===state.ratio));});
+  $('ratio-note').textContent=state.ratio==='free'?'自由比率：縦横を個別に入力できます。':'横幅または縦幅を変更すると、もう一方を自動計算します。';
+  $('thirds-check').checked=state.thirds;$('center-check').checked=state.center;$('safe-check').checked=state.safe;
+  $('thirds').style.display=state.thirds?'':'none';$('centers').style.display=state.center?'':'none';$('safebox').style.display=state.safe?'':'none';
+  $('frame').style.aspectRatio=`${state.width} / ${state.height}`;
+  $('ratio-display').textContent=state.ratio==='free'?'自由比率':state.ratio;
+  $('size-label').textContent=`${fmt(state.width)} × ${fmt(state.height)} px`;
+  $('x-lines').textContent=`${fmt(state.width/3)} / ${fmt(state.width*2/3)}`;
+  $('y-lines').textContent=`${fmt(state.height/3)} / ${fmt(state.height*2/3)}`;
+  $('megapixels').textContent=`${(state.width*state.height/1e6).toFixed(2)} MP`;
+  $('pixel-count').textContent=`${fmt(state.width*state.height)} px`;
+  const divisor=gcd(state.width,state.height);
+  $('actual-ratio').textContent=`${state.width/divisor}:${state.height/divisor}`;
+  layoutPreview();
+  try{localStorage.setItem('framecalc-v1',JSON.stringify(state));}catch(_){}
+}
+function layoutPreview(){
+  const area=$('preview-area');const availW=Math.max(80,area.clientWidth-8);
+  const availH=Math.min(Math.max(window.innerHeight*.38,200),340);
+  const r=state.width/state.height;
+  const width=Math.min(availW,availH*r);
+  $('frame').style.width=`${Math.max(1,width)}px`;
+  $('frame').style.height=`${Math.max(1,width/r)}px`;
+  area.style.minHeight=`${Math.max(165,Math.min(300,availH))}px`;
+}
+function changeDim(dim){
+  const raw=$(dim).value;
+  if(!finite(raw))return;
+  const n=clamp(raw);
+  state[dim]=n;
+  const ratio=ratioNum(state.ratio);
+  if(ratio){if(dim==='width')state.height=clamp(n/ratio);else state.width=clamp(n*ratio);}
+  sync();
+}
+for(const dim of ['width','height']){
+  $(dim).addEventListener('input',()=>changeDim(dim));
+  $(dim).addEventListener('blur',sync);
+}
+document.querySelectorAll('[data-ratio]').forEach(btn=>btn.addEventListener('click',()=>{
+ const r=btn.dataset.ratio;
+ if(r!=='free'){
+   const old=state.width/state.height,newR=ratioNum(r);
+   if((old>1&&newR<1)||(old<1&&newR>1)){[state.width,state.height]=[state.height,state.width];}
+   state.height=clamp(state.width/newR);
+ }
+ state.ratio=r;sync();
+}));
+document.querySelectorAll('[data-size]').forEach(btn=>btn.addEventListener('click',()=>{
+  const [w,h]=btn.dataset.size.split(',').map(Number);state.width=w;state.height=h;
+  const matched=['16:9','9:16','4:3','3:2','1:1'].find(r=>Math.abs(ratioNum(r)-w/h)<.0002);
+  state.ratio=matched||'free';sync();
+}));
+$('swap').addEventListener('click',()=>{
+ [state.width,state.height]=[state.height,state.width];
+ const map={'16:9':'9:16','9:16':'16:9','4:3':'free','3:2':'free','1:1':'1:1','free':'free'};
+ state.ratio=map[state.ratio];sync();
+});
+[['thirds-check','thirds'],['center-check','center'],['safe-check','safe']].forEach(([id,key])=>$(id).addEventListener('change',e=>{state[key]=e.target.checked;sync();}));
+$('image-file').addEventListener('change',e=>{
+ const file=e.target.files&&e.target.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){toast('画像ファイルを選択してください');return;}
+ if(previewURL)URL.revokeObjectURL(previewURL);
+ previewURL=URL.createObjectURL(file);
+ const img=$('reference-image');img.onload=()=>{img.hidden=false;$('frame-tag').style.display='none';};
+ img.onerror=()=>toast('画像を読み込めませんでした');img.src=previewURL;
+ $('remove-image').hidden=false;
+});
+$('remove-image').addEventListener('click',()=>{
+ $('reference-image').hidden=true;$('reference-image').removeAttribute('src');$('image-file').value='';
+ if(previewURL)URL.revokeObjectURL(previewURL);previewURL=null;$('frame-tag').style.display='';$('remove-image').hidden=true;
+});
+function resultText(){const w=state.width,h=state.height,d=gcd(w,h);return `FrameCalc\n解像度: ${w} × ${h} px\nアスペクト比: ${w/d}:${h/d}\n縦3分割(X): ${fmt(w/3)}, ${fmt(w*2/3)} px\n横3分割(Y): ${fmt(h/3)}, ${fmt(h*2/3)} px\n画素数: ${fmt(w*h)} px (${(w*h/1e6).toFixed(2)} MP)`;}
+$('copy').addEventListener('click',async()=>{
+ const value=resultText();
+ try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value);}else{const ta=document.createElement('textarea');ta.value=value;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw Error('copy');ta.remove();}toast('計算結果をコピーしました');}
+ catch(_){toast('コピーできません。HTTPSで開いてください');}
+});
+$('export').addEventListener('click',()=>{
+ const w=state.width,h=state.height;
+ if(w*h>40000000){toast('画像が大きすぎます（上限4000万画素）');return;}
+ if(!state.thirds&&!state.center&&!state.safe){toast('表示するガイドを選択してください');return;}
+ try{
+   const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
+   const scale=Math.max(1,Math.round(Math.min(w,h)/720));
+   const line=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+   if(state.thirds){ctx.strokeStyle='rgba(255,255,255,.86)';ctx.lineWidth=scale;line(w/3,0,w/3,h);line(w*2/3,0,w*2/3,h);line(0,h/3,w,h/3);line(0,h*2/3,w,h*2/3);}
+   if(state.center){ctx.strokeStyle='#ffd38e';ctx.lineWidth=scale;ctx.setLineDash([8*scale,6*scale]);line(w/2,0,w/2,h);line(0,h/2,w,h/2);ctx.setLineDash([]);}
+   if(state.safe){ctx.strokeStyle='#71f8d9';ctx.lineWidth=scale;ctx.strokeRect(w*.05,h*.05,w*.9,h*.9);}
+   canvas.toBlob(blob=>{
+     if(!blob){toast('PNGを作成できませんでした');return;}
+     const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=`framecalc-guide-${w}x${h}.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),15000);toast('透明ガイドPNGを作成しました');
+   },'image/png');
+ }catch(e){toast('この解像度では書き出せませんでした');}
+});
+window.addEventListener('resize',layoutPreview);
+sync();
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
