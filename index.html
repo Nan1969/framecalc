@@ -1,264 +1,184 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0c1525" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="FrameCalc" />
-  <meta name="description" content="縦横画素数の計算・アスペクト比固定・3分割構図ガイド。オフラインでも使えるスマホ向けツール。" />
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-  <title>FrameCalc｜縦横画素・3分割ガイド</title>
-  <style>
-    :root { color-scheme: dark; --bg:#0b1424; --surface:#152136; --panel:#18263d; --line:#34445b; --txt:#f4f7fb; --muted:#a6b7cb; --accent:#70e2cb; --accent-dark:#0b3936; --warning:#ffd38e; }
-    * {box-sizing:border-box}
-    html {font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif; -webkit-text-size-adjust:100%}
-    body {margin:0;background:linear-gradient(170deg,#0e1b2d,#090f1c 75%);color:var(--txt);min-height:100dvh;}
-    body:before {content:"";position:fixed;inset:0 0 auto;height:290px;pointer-events:none;background:radial-gradient(ellipse at 70% 0%,rgba(76,151,168,.12),transparent 70%)}
-    .app {max-width:650px;margin:auto;padding:calc(17px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));position:relative;}
-    header {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px;}
-    .brand {display:flex;gap:11px;align-items:center;}
-    .logo {width:42px;height:42px;border-radius:12px;background:#173947;display:grid;place-items:center;border:1px solid #397987;flex:none;}
-    .logo svg {width:28px;height:28px}
-    h1 {font-size:21px;line-height:1.1;letter-spacing:.01em;margin:0;}
-    .subtitle {font-size:11px;color:var(--muted);margin-top:5px;}
-    .v {border:1px solid var(--line);color:var(--muted);font-size:11px;padding:5px 9px;border-radius:20px}
-    .card {background:rgba(22,34,54,.9);border:1px solid #34445b;border-radius:18px;padding:17px;margin-bottom:13px;box-shadow:0 5px 16px rgba(0,0,0,.08);}
-    .section-head {display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;}
-    .section-head h2 {margin:0;font-size:15px;font-weight:740;}
-    .helper {color:var(--muted);font-size:11px;}
-    .chipline {display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:1px 0 4px;margin:0 -1px 12px;}
-    .chipline::-webkit-scrollbar{display:none}
-    button {font:inherit;cursor:pointer;touch-action:manipulation;}
-    .chip {color:#d8e2ef;background:#1e314b;border:1px solid #3c516b;border-radius:11px;padding:10px 12px;white-space:nowrap;font-size:13px;font-weight:650;flex:none;min-height:42px;}
-    .chip.active {border-color:var(--accent);background:#183c43;color:#a6ffee}
-    .fields {display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:9px;margin-top:5px;}
-    .field {min-width:0;}
-    .field label {display:block;color:#c0cfe0;font-size:12px;margin:0 0 7px 2px;}
-    .inputwrap {display:flex;align-items:center;gap:4px;border:1px solid #4b607b;border-radius:12px;background:#0b1729;padding:0 10px;height:52px;}
-    .inputwrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(112,226,203,.10)}
-    input[type="number"] {width:100%;min-width:0;background:none;border:none;outline:none;color:var(--txt);font-size:23px;font-weight:730;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield;}
-    input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-    .px {font-size:12px;color:var(--muted)}
-    .swap {height:52px;width:37px;border:1px solid #415871;color:#e5f1fc;background:#25364e;border-radius:10px;font-size:23px;line-height:1;}
-    .line-info {font-size:12px;color:var(--muted);line-height:1.5;margin:12px 2px 0;}
-    .preset {display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:3px;margin-top:12px;}
-    .preset::-webkit-scrollbar{display:none}
-    .preset button {white-space:nowrap;border:1px solid #334d62;background:#132b3b;color:#b9d2df;padding:8px 11px;border-radius:9px;font-size:12px;min-height:34px;flex:none;}
-    .preview-outer {background:#0b1726;border:1px solid #293e55;border-radius:15px;padding:12px 8px;overflow:hidden;}
-    .preview-area {width:100%;display:flex;align-items:center;justify-content:center;min-height:165px;}
-    .frame {position:relative;flex:none;overflow:hidden;background:linear-gradient(160deg,#7496aa 0%,#456b82 55%,#263e54 56%,#203044 100%);outline:1px solid #93b3c2;box-shadow:0 8px 19px rgba(0,0,0,.2)}
-    .frame:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(8,15,25,.08),transparent 30%,rgba(8,15,25,.08));}
-    .frame img {position:absolute;width:100%;height:100%;inset:0;object-fit:cover;z-index:1;}
-    .frame-tag {position:absolute;left:10px;bottom:10px;font-size:10px;letter-spacing:.13em;color:white;background:rgba(5,17,30,.6);border-radius:4px;padding:4px 6px;z-index:2;}
-    .guides {position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;}
-    .guides line,.guides rect{vector-effect:non-scaling-stroke;}
-    .guide-grid {stroke:rgba(255,255,255,.87);stroke-width:1.3}
-    .guide-center{stroke:#ffd38e;stroke-width:1.2;stroke-dasharray:7 5}
-    .guide-safe{fill:none;stroke:#71f8d9;stroke-width:1.5}
-    .frame-size {text-align:center;margin-top:10px;font-weight:720;font-size:14px;font-variant-numeric:tabular-nums}
-    .toggle-list {display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-    .toggle {display:flex;align-items:center;gap:7px;background:#23364c;border:1px solid #3d5168;border-radius:10px;padding:10px 11px;font-size:12px;color:#f0f5fc;cursor:pointer;min-height:42px;}
-    .toggle input{accent-color:var(--accent);width:17px;height:17px;margin:0;}
-    .splitdata {display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px;}
-    .metric {border:1px solid #32495f;border-radius:12px;background:#112339;padding:12px;min-width:0;}
-    .metric-label {color:var(--muted);font-size:11px;margin-bottom:6px;}
-    .metric-value {font-size:17px;font-weight:750;letter-spacing:-.02em;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-    .metric-foot {font-size:10px;color:#94a9bf;margin-top:4px;}
-    .actions {display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px;}
-    .btn {border:1px solid #456276;background:#1d3449;color:#f2f9ff;border-radius:12px;padding:12px 10px;min-height:49px;font-size:13px;font-weight:750;}
-    .btn.primary {background:#78e7d0;color:#0b2930;border-color:#78e7d0;}
-    .image-row {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;}
-    .file-button {display:inline-flex;gap:7px;align-items:center;justify-content:center;border:1px solid #52667c;border-radius:10px;padding:10px 12px;color:#e8f1fc;background:#23354a;font-size:12px;cursor:pointer;}
-    .image-row input {display:none}
-    .linkbtn {background:none;border:none;color:#97dddf;text-decoration:underline;padding:9px 4px;font-size:12px;}
-    .notice {color:var(--muted);font-size:11px;line-height:1.7;margin:11px 2px 0;}
-    #toast {position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(25px);opacity:0;pointer-events:none;background:#e1fff5;color:#09352d;padding:11px 16px;border-radius:11px;font-size:13px;font-weight:700;box-shadow:0 7px 28px rgba(0,0,0,.4);transition:opacity .18s,transform .18s;white-space:nowrap;z-index:20}
-    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-    footer{text-align:center;color:#889bb0;font-size:11px;padding-top:4px;line-height:1.8;}
-    @media(min-width:540px) {.app{padding-left:28px;padding-right:28px}.card{padding:21px}.preview-area{min-height:230px}}
-    @media(max-width:355px){.app{padding-left:11px;padding-right:11px}.card{padding:13px}.metric-value{font-size:15px}.fields{gap:5px}.inputwrap{padding:0 7px}input[type="number"]{font-size:20px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FrameCalc">
+<meta name="description" content="画像サイズ・トリミング・3分割構図ガイド・SketchUp/Blenderカメラ換算。スマホ/PC対応、端末内処理。">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<title>FrameCalc v1.1｜画素・構図・カメラ</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1423;--surface:#142238;--surface2:#1c3047;--edge:#34495f;--text:#f1f6fe;--muted:#a9bacb;--mint:#77e2cc;--gold:#ffd894}
+*{box-sizing:border-box}html{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;-webkit-text-size-adjust:100%}body{background:linear-gradient(155deg,#0f2034,#090f1a 70%);color:var(--text);margin:0;min-height:100dvh}button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.42;cursor:not-allowed}
+.app{max-width:1250px;padding:calc(env(safe-area-inset-top) + 17px) 16px calc(env(safe-area-inset-bottom) + 30px);margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand{display:flex;gap:10px;align-items:center}.brand-mark{width:42px;height:42px;display:grid;place-items:center;border:1px solid #418b95;background:#183849;border-radius:11px;color:var(--mint);font-size:22px;flex:none}h1{margin:0;font-size:21px;letter-spacing:.005em}small,.small{font-size:11px;color:var(--muted)}.top-actions{display:flex;gap:9px;align-items:center}.version{font-size:11px;color:var(--muted);border:1px solid var(--edge);border-radius:20px;padding:6px 8px}.gear{font-size:20px;border:1px solid var(--edge);border-radius:12px;display:grid;place-items:center;background:var(--surface2);color:var(--text);height:42px;width:45px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}.tab{flex:1;background:#14263b;border:1px solid #364a61;border-radius:11px;padding:12px 7px;color:#d0dbe8;font-size:13px;font-weight:700}.tab.active{border-color:var(--mint);background:#153e44;color:#bbfff1}.panel[hidden],.modal[hidden],[hidden]{display:none!important}.card{border:1px solid var(--edge);border-radius:16px;background:rgba(20,34,56,.95);padding:16px;margin-bottom:12px}.card h2{font-size:15px;margin:0 0 12px}.hd{display:flex;align-items:center;justify-content:space-between;gap:8px}.helper{font-size:11px;color:var(--muted)}.column-grid{display:block}
+.chips,.presets{display:flex;overflow-x:auto;gap:7px;padding:2px 0 8px;margin-bottom:5px;scrollbar-width:thin}.chip,.presets button{flex:none;min-height:39px;border-radius:10px;padding:9px 12px;background:#1b3048;border:1px solid #40566d;color:#dce8f6;font-size:12px;font-weight:700}.chip.active{background:#16433f;color:#b6fff0;border-color:var(--mint)}.presets{margin-top:10px;margin-bottom:0}.presets button{min-height:35px;font-size:11px;padding:8px 10px}
+.fields{display:grid;grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr);gap:8px;align-items:end}label,.field-label{display:block;color:#ccd8e6;font-size:12px;margin-bottom:6px}.text-input,select{height:42px;width:100%;min-width:0;color:var(--text);background:#0d1a2a;border:1px solid #4c6177;border-radius:9px;padding:0 10px;outline:none}.text-input:focus,select:focus{border-color:var(--mint)}.pixel{font-size:22px;font-variant-numeric:tabular-nums;font-weight:700;height:50px}.swap{height:50px;border-radius:10px;background:#223951;border:1px solid var(--edge);color:var(--text);font-size:23px}.hint,.note{font-size:11px;color:var(--muted);line-height:1.65;margin:10px 0 0}.preview-wrap{border:1px solid #263e54;background:#0b1625;padding:14px 9px;border-radius:13px;position:relative}.preview-area{display:flex;align-items:center;justify-content:center;min-height:235px;width:100%}.frame{position:relative;flex:none;overflow:hidden;background:linear-gradient(140deg,#618da8,#274960 56%,#1c3145 56%);outline:1px solid #86aabc;box-shadow:0 7px 20px #0005}.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}.frame img[hidden]{display:none}.watermark{position:absolute;bottom:10px;left:9px;font-size:10px;letter-spacing:.1em;color:#fff;background:#112b3b99;padding:5px 7px;border-radius:4px}.guides{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.guides line,.guides rect{vector-effect:non-scaling-stroke}.frame-label{text-align:center;margin:10px 0 0;font-size:13px;font-weight:700}.toggles{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.toggle{display:flex;align-items:center;gap:6px;border:1px solid #3f5369;border-radius:9px;background:#20344b;color:#e9f0f9;padding:10px;font-size:12px;cursor:pointer}.toggle input{accent-color:var(--mint);width:16px;height:16px;margin:0}.upload{margin-top:12px;padding:15px;border:1.5px dashed #66839c;border-radius:12px;background:#13283d;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;transition:background .2s,border-color .2s}.upload.drag{background:#174e54;border-color:var(--mint)}.upload strong{font-size:13px}.upload .hint{margin:0}.buttons-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.btn{border-radius:10px;padding:10px 13px;background:#253b54;border:1px solid #4b647a;color:var(--text);font-size:12px;font-weight:700;min-height:42px}.btn.primary{background:var(--mint);border-color:var(--mint);color:#092b2a}.btn.danger{color:#ffccbd}.file-input{display:none}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric{border:1px solid #334d64;background:#112438;border-radius:11px;padding:11px;min-width:0}.metric b{display:block;font-size:16px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;margin-top:5px}.metric span{font-size:11px;color:var(--muted)}.crop-position{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}.inline-options{display:flex;gap:6px}.pos{flex:1;min-height:38px;border:1px solid #405773;border-radius:9px;color:#e4edf9;background:#152c43;font-size:12px}.pos.active{border-color:var(--mint);background:#1b4b4b;color:#aeffe9}.pos:disabled{opacity:.33}.save-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.save-grid .btn{min-height:48px}.soft{background:var(--surface2);border:1px solid var(--edge);border-radius:9px;padding:10px;margin-top:10px}.soft .toggle{margin:0;background:transparent;border:none;padding:0}.divider{height:1px;background:#33465a;margin:13px 0}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.row{display:flex;gap:9px;align-items:center}.row>*{min-width:0}.row>div{flex:1}.result{border:1px solid #375c67;background:#123339;border-radius:12px;padding:15px;margin-top:12px}.result-label{font-size:12px;color:#aacbc8}.result-main{font-size:26px;font-weight:800;margin:4px 0}.result-details{font-size:12px;line-height:1.9;color:#d0e8e9}footer{font-size:11px;color:#8da2b8;text-align:center;line-height:1.8;padding-top:10px}
+.modal{position:fixed;inset:0;background:#0009;z-index:50;display:flex;justify-content:center;align-items:flex-start;padding:calc(env(safe-area-inset-top) + 16px) 12px 28px;overflow:auto}.dialog{background:#17273d;border:1px solid #587084;border-radius:17px;width:min(100%,480px);padding:17px;box-shadow:0 14px 60px #0008;max-height:calc(100dvh - 34px);overflow-y:auto}.dialog h2{font-size:17px;margin:0}.settings-section{padding-top:13px;margin-top:13px;border-top:1px solid #3c5065}.settings-section h3{font-size:13px;margin:0 0 10px}.settings-section label{font-size:12px}.settings-section .grid2{gap:8px}.settings-section input[type="range"]{width:100%;accent-color:var(--mint)}.dialog .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}#toast{position:fixed;z-index:70;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,22px);background:#dcfff4;color:#0b3530;border-radius:11px;padding:11px 15px;white-space:normal;max-width:90vw;font-size:12px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 8px 20px #0006}#toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:850px){.app{padding-left:27px;padding-right:27px}.column-grid{display:grid;grid-template-columns:380px minmax(0,1fr);gap:14px;align-items:start}.column-grid .leftcol .card,.column-grid .rightcol .card{margin-bottom:14px}.preview-area{min-height:370px}.upload{min-height:125px;justify-content:center}.save-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:380px){.app{padding-left:10px;padding-right:10px}.card{padding:12px}.pixel{font-size:20px}.fields{gap:5px}.metric b{font-size:14px}.tab{font-size:12px}}
+</style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <div class="brand"><div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="2" y="2" width="28" height="28" rx="5" stroke="#7debd2" stroke-width="2"/><path d="M11.33 3V29M20.67 3V29M3 11.33H29M3 20.67H29" stroke="#7debd2" stroke-width="1.5"/></svg></div><div><h1>FrameCalc</h1><div class="subtitle">縦横画素計算 ＋ 構図ガイド</div></div></div><span class="v">v1.0</span>
-  </header>
-  <section class="card" aria-labelledby="resolution-title">
-    <div class="section-head"><h2 id="resolution-title">01 / 画面サイズ</h2><span class="helper">比率を固定して自動計算</span></div>
-    <div id="ratios" class="chipline" aria-label="アスペクト比">
-      <button class="chip active" data-ratio="16:9" type="button">16:9</button><button class="chip" data-ratio="9:16" type="button">9:16</button><button class="chip" data-ratio="4:3" type="button">4:3</button><button class="chip" data-ratio="3:2" type="button">3:2</button><button class="chip" data-ratio="1:1" type="button">1:1</button><button class="chip" data-ratio="free" type="button">自由</button>
-    </div>
-    <div class="fields">
-      <div class="field"><label for="width">横幅（px）</label><div class="inputwrap"><input id="width" type="number" inputmode="numeric" min="1" max="16384" value="1920" aria-label="横幅ピクセル"/><span class="px">px</span></div></div>
-      <button id="swap" class="swap" type="button" title="縦横を入れ替える" aria-label="縦横を入れ替える">⇄</button>
-      <div class="field"><label for="height">縦幅（px）</label><div class="inputwrap"><input id="height" type="number" inputmode="numeric" min="1" max="16384" value="1080" aria-label="縦幅ピクセル"/><span class="px">px</span></div></div>
-    </div>
-    <div class="line-info" id="ratio-note">横幅または縦幅を変更すると、もう一方を自動計算します。</div>
-    <div class="preset" aria-label="解像度プリセット">
-      <button type="button" data-size="1280,720">HD 720p</button><button type="button" data-size="1920,1080">FHD 1080p</button><button type="button" data-size="2048,1152">2048 × 1152</button><button type="button" data-size="3840,2160">4K UHD</button><button type="button" data-size="1080,1920">縦型 FHD</button>
-    </div>
-  </section>
-  <section class="card" aria-labelledby="preview-title">
-    <div class="section-head"><h2 id="preview-title">02 / 構図プレビュー</h2><span class="helper" id="ratio-display">16:9</span></div>
-    <div class="preview-outer"><div class="preview-area" id="preview-area">
-      <div class="frame" id="frame" style="width:100%;aspect-ratio:16/9">
-        <img id="reference-image" alt="読み込んだ背景画像" hidden />
-        <div class="frame-tag" id="frame-tag">PREVIS</div>
-        <svg class="guides" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
-          <g id="thirds" class="guide-grid"><line x1="333.333" y1="0" x2="333.333" y2="1000"/><line x1="666.667" y1="0" x2="666.667" y2="1000"/><line x1="0" y1="333.333" x2="1000" y2="333.333"/><line x1="0" y1="666.667" x2="1000" y2="666.667"/></g>
-          <g id="centers" class="guide-center" hidden><line x1="500" y1="0" x2="500" y2="1000"/><line x1="0" y1="500" x2="1000" y2="500"/></g>
-          <rect id="safebox" class="guide-safe" x="50" y="50" width="900" height="900" hidden />
-        </svg>
-      </div>
-    </div><div id="size-label" class="frame-size">1,920 × 1,080 px</div></div>
-    <div class="toggle-list">
-      <label class="toggle"><input id="thirds-check" type="checkbox" checked/>3分割ライン</label>
-      <label class="toggle"><input id="center-check" type="checkbox"/>センターライン</label>
-      <label class="toggle"><input id="safe-check" type="checkbox"/>セーフエリア 5%</label>
-    </div>
-    <div class="image-row">
-      <label class="file-button" for="image-file">▧　画像を重ねて確認</label><input id="image-file" type="file" accept="image/*" />
-      <button id="remove-image" type="button" class="linkbtn" hidden>画像を外す</button>
-    </div>
-    <div class="notice">画像の読み込みは端末内のみ。画面比率が異なる場合、プレビューは中央でトリミング表示します。元画像は変更しません。</div>
-  </section>
-  <section class="card" aria-labelledby="calculate-title">
-    <div class="section-head"><h2 id="calculate-title">03 / 計算結果</h2><span class="helper">1/3・2/3の座標</span></div>
-    <div class="splitdata">
-      <div class="metric"><div class="metric-label">縦ライン X 座標</div><div class="metric-value" id="x-lines">640 / 1,280</div><div class="metric-foot">左端からの位置（px）</div></div>
-      <div class="metric"><div class="metric-label">横ライン Y 座標</div><div class="metric-value" id="y-lines">360 / 720</div><div class="metric-foot">上端からの位置（px）</div></div>
-      <div class="metric"><div class="metric-label">総画素数</div><div class="metric-value" id="megapixels">2.07 MP</div><div class="metric-foot" id="pixel-count">2,073,600 px</div></div>
-      <div class="metric"><div class="metric-label">実際の縦横比</div><div class="metric-value" id="actual-ratio">16:9</div><div class="metric-foot" id="scale-note">横 : 縦</div></div>
-    </div>
-    <div class="actions">
-      <button id="copy" type="button" class="btn">計算結果をコピー</button>
-      <button id="export" type="button" class="btn primary">ガイドPNGを保存</button>
-    </div>
-    <p class="notice">透明なPNGのガイド画像を、指定した実解像度で書き出します。Photopeaなどで最上位レイヤーに置いて使えます。</p>
-  </section>
-  <footer>オフライン動作対応 ・ 計算・画像処理は端末内で完結<br/>FrameCalc / standalone utility</footer>
-</div>
+<header><div class="brand"><div class="brand-mark" aria-hidden="true">▦</div><div><h1>FrameCalc</h1><div class="small">画素・構図・カメラ換算</div></div></div><div class="top-actions"><span class="version">v1.1</span><button type="button" class="gear" id="open-settings" title="設定" aria-label="設定を開く">⚙</button></div></header>
+<nav class="tabs" aria-label="機能切り替え"><button type="button" class="tab active" data-tab="images">画像・構図</button><button type="button" class="tab" data-tab="camera">カメラ換算</button></nav>
+<main>
+<section id="images-panel" class="panel">
+<div class="column-grid"><div class="leftcol">
+<section class="card"><div class="hd"><h2>01 / 画面サイズ</h2><span class="helper">縦横を連動計算</span></div>
+<div class="chips" id="ratios" aria-label="画面比率"><button class="chip" data-ratio="16:9">16:9</button><button class="chip" data-ratio="9:16">9:16</button><button class="chip" data-ratio="4:3">4:3</button><button class="chip" data-ratio="3:2">3:2</button><button class="chip" data-ratio="1:1">1:1</button><button class="chip" data-ratio="free">自由</button></div>
+<div class="fields"><div><label for="width">横幅</label><input class="text-input pixel" type="number" id="width" min="1" max="16384" inputmode="numeric" value="1920"></div><button id="swap" class="swap" title="縦横を交換">⇄</button><div><label for="height">縦幅</label><input class="text-input pixel" type="number" id="height" min="1" max="16384" inputmode="numeric" value="1080"></div></div>
+<div class="presets"><button data-size="1280,720">720p</button><button data-size="1920,1080">1080p</button><button data-size="2048,1152">2048×1152</button><button data-size="3840,2160">4K</button><button data-size="1080,1920">縦 FHD</button></div>
+<p class="hint" id="ratio-note"></p></section>
+<section class="card"><div class="hd"><h2>02 / 画像情報・トリミング</h2><span class="helper" id="source-state">画像未読込</span></div>
+<div class="metrics"><div class="metric"><span>元画像サイズ</span><b id="source-size">—</b></div><div class="metric"><span>拡大・縮小率</span><b id="scale-value">—</b></div><div class="metric"><span>切り出し範囲</span><b id="crop-size">—</b></div><div class="metric"><span>出力画素数</span><b id="target-size">—</b></div></div>
+<div class="crop-position"><div><label>水平方向</label><div class="inline-options" id="horizontal-positions"><button class="pos" data-axis="x" data-pos="0">左</button><button class="pos" data-axis="x" data-pos="0.5">中央</button><button class="pos" data-axis="x" data-pos="1">右</button></div></div><div><label>垂直方向</label><div class="inline-options" id="vertical-positions"><button class="pos" data-axis="y" data-pos="0">上</button><button class="pos" data-axis="y" data-pos="0.5">中央</button><button class="pos" data-axis="y" data-pos="1">下</button></div></div></div>
+<p class="note" id="crop-note">画像読み込み後、元画像に対する倍率と切り出し位置を表示します。</p></section>
+<section class="card"><div class="hd"><h2>03 / 保存</h2><span class="helper">端末内で処理</span></div>
+<div class="save-grid"><button class="btn primary" id="save-png" disabled>画像 PNG</button><button class="btn" id="save-jpeg" disabled>画像 JPEG</button><button class="btn" id="save-guide">透明ガイド PNG</button><button class="btn" id="save-psd">レイヤー PSD</button></div>
+<div class="soft"><label class="toggle"><input type="checkbox" id="psd-include-image" checked>PSDにトリミング画像を含める（ガイドは別レイヤー）</label></div><p class="note">PNG/JPEG画像はガイド線を焼き込みません。ガイドPNGは透明背景です。PSDはガイドと画像を別レイヤーで保存します。画像未読込ならガイドのみ。</p><button class="btn" id="copy-report" style="width:100%;margin-top:12px">画素・構図情報をコピー</button></section>
+</div><div class="rightcol">
+<section class="card"><div class="hd"><h2>構図プレビュー</h2><span class="helper" id="aspect-label">16:9</span></div>
+<div class="preview-wrap"><div class="preview-area" id="preview-area"><div class="frame" id="frame"><img id="reference-image" alt="読み込んだ画像" hidden><div class="watermark" id="watermark">PREVIS</div><svg class="guides" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><g id="thirds"><line x1="333.333" y1="0" x2="333.333" y2="1000"/><line x1="666.667" y1="0" x2="666.667" y2="1000"/><line x1="0" y1="333.333" x2="1000" y2="333.333"/><line x1="0" y1="666.667" x2="1000" y2="666.667"/></g><g id="assist" stroke-dasharray="5 5"><line id="assist-up1" x1="0" x2="1000"/><line id="assist-up2" x1="0" x2="1000"/><line id="assist-low1" x1="0" x2="1000"/><line id="assist-low2" x1="0" x2="1000"/></g><g id="centers" stroke-dasharray="6 5"><line x1="500" y1="0" x2="500" y2="1000"/><line x1="0" y1="500" x2="1000" y2="500"/></g><rect id="safebox" x="50" y="50" width="900" height="900" fill="none"/></svg></div></div><div class="frame-label" id="size-label">1920 × 1080 px</div></div>
+<div class="toggles"><label class="toggle"><input type="checkbox" id="thirds-check">3分割線</label><label class="toggle"><input type="checkbox" id="assist-check">3分割補助線</label><label class="toggle"><input type="checkbox" id="center-check">センター線</label><label class="toggle"><input type="checkbox" id="safe-check">セーフエリア</label></div>
+<div id="upload" class="upload" role="region" aria-label="画像のアップロード"><strong>画像をドロップ / Ctrl＋V で貼り付け</strong><div class="hint">スマホは「画像を選択」。端末の画像はサーバーへ送信しません。</div><div class="buttons-row"><button type="button" class="btn primary" id="choose-image">画像を選択</button><button type="button" class="btn danger" id="remove-image" disabled>画像を外す</button></div><input class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif,image/heic,image/heif" id="image-file"></div>
+<p class="note">元画像と同じ比率なら全体をフィット。異なる比率なら短い辺を合わせ、はみ出す方向をトリミングします。</p></section>
+<section class="card"><h2>ガイド座標</h2><div class="metrics"><div class="metric"><span>縦線（X）</span><b id="x-lines">—</b></div><div class="metric"><span>横線（Y）</span><b id="y-lines">—</b></div><div class="metric"><span>補助線（Y）</span><b id="assist-lines">—</b></div><div class="metric"><span>総画素数</span><b id="pixel-count">—</b></div></div></section>
+</div></div>
+</section>
+<section class="panel" id="camera-panel" hidden><section class="card" style="max-width:700px;margin:auto"><div class="hd"><h2>SketchUp ↔ Blender カメラ換算</h2><span class="helper">双方向・即時計算</span></div><p class="note" style="margin:0 0 13px">どちらの数値も編集できます。現在の画面比率 <b id="camera-aspect"></b> を使って水平・垂直画角を計算します。</p>
+<div class="grid2"><div><label for="camera-fov">SketchUp 画角（°）</label><input class="text-input" type="number" step="0.01" min="1" max="120" id="camera-fov" value="45"></div><div><label for="camera-focal">Blender 焦点距離（mm）</label><input class="text-input" type="number" step="0.01" min="0.1" max="3000" id="camera-focal" value="43.46"></div></div><div style="margin-top:12px"><label for="fov-axis">SketchUp 画角の基準</label><select id="fov-axis"><option value="horizontal">水平画角（幅方向）</option><option value="vertical">垂直画角（高さ方向）</option></select></div>
+<div class="result"><div class="result-label" id="camera-result-label">Blender 設定</div><div class="result-main" id="camera-result">43.46 mm</div><div class="result-details" id="camera-details"></div></div>
+<p class="note">BlenderのSensor Fit（Auto/Horizontal/Vertical）とセンサー幅・高さは右上の⚙で設定します。SketchUpのfovが水平か垂直かも合わせてください。透視投影が対象です。カメラシフトや特殊なレンズは対象外です。</p></section></section>
+</main><footer>FrameCalc v1.1 / iPhone・PC 共通<br>画像処理と設定保存は端末内のみ。PSDは編集可能な画像レイヤー形式。</footer></div>
+<div id="settings" class="modal" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title"><div class="hd"><h2 id="settings-title">⚙ 設定</h2><button class="btn" id="close-settings">閉じる</button></div>
+<div class="settings-section"><h3>3分割線・補助線</h3><div class="grid2"><div><label for="guide-color">ライン色</label><select id="guide-color"><option value="#ffffff">白</option><option value="#000000">黒</option><option value="#ff5757">赤</option><option value="#6ef0d0">ミント</option></select></div><div><label for="guide-width">線幅（px）</label><select id="guide-width"><option value="1">1 px</option><option value="2">2 px</option><option value="3">3 px</option><option value="4">4 px</option><option value="5">5 px</option></select></div></div><div style="margin-top:12px"><label for="guide-opacity">不透明度：<b id="opacity-label">70%</b></label><input id="guide-opacity" type="range" min="10" max="100" step="5" value="75"></div>
+<div class="grid2" style="margin-top:9px"><div><label for="assist-offset">3分割補助線 ±（画面高さの％）</label><input id="assist-offset" class="text-input" type="number" min="0" max="15" step="0.5" value="5"></div><div><label for="assist-target">補助線の基準</label><select id="assist-target"><option value="upper">上1/3のみ</option><option value="lower">下1/3のみ</option><option value="both">上下とも</option></select></div></div><p class="note">上1/3の場合、初期設定は高さ28.33% / 38.33% の位置です。</p></div>
+<div class="settings-section"><h3>出力・初期値</h3><div class="grid2"><div><label for="default-ratio">標準画面比率</label><select id="default-ratio"><option value="9:16">9:16</option><option value="16:9">16:9</option><option value="4:3">4:3</option><option value="1:1">1:1</option></select></div><div><label for="jpeg-quality">JPEG 品質</label><select id="jpeg-quality"><option value="0.85">85%</option><option value="0.92">92%</option><option value="0.98">98%</option></select></div></div></div>
+<div class="settings-section"><h3>カメラ / Blender 設定</h3><div class="grid2"><div><label for="sensor-width">Sensor Width (mm)</label><input id="sensor-width" class="text-input" type="number" min="1" max="100" step="0.1"></div><div><label for="sensor-height">Sensor Height (mm)</label><input id="sensor-height" class="text-input" type="number" min="1" max="100" step="0.1"></div></div><div style="margin-top:9px"><label for="sensor-fit">Blender Sensor Fit</label><select id="sensor-fit"><option value="AUTO">Auto</option><option value="HORIZONTAL">Horizontal</option><option value="VERTICAL">Vertical</option></select></div></div><div class="actions"><button class="btn" id="reset-settings">初期設定に戻す</button><button class="btn primary" id="save-settings">保存して閉じる</button></div><p class="note">設定はこの端末のブラウザ内にのみ保存されます。GitHubへアップロードしません。</p></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
 (() => {
 'use strict';
-const $ = id => document.getElementById(id);
-const keys = ['width','height','ratio','thirds','center','safe'];
-const state = {width:1920,height:1080,ratio:'16:9',thirds:true,center:false,safe:false};
-try {const saved=JSON.parse(localStorage.getItem('framecalc-v1')||'null'); if(saved){for(const k of keys){if(Object.prototype.hasOwnProperty.call(saved,k)) state[k]=saved[k];}}} catch(_){}
-const finite = v=> Number.isFinite(Number(v)) && Number(v)>0;
-const clamp = v=>Math.max(1,Math.min(16384,Math.round(Number(v)||1)));
-state.width=clamp(state.width);state.height=clamp(state.height);
-if(!['16:9','9:16','4:3','3:2','1:1','free'].includes(state.ratio))state.ratio='free';
-const ratioNum = r => {if(r==='free')return null; const [a,b]=r.split(':').map(Number);return a/b;};
-const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:2});
-const gcd=(a,b)=>b?gcd(b,a%b):a;
-const toast=(msg)=>{const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2400)};
-let previewURL=null;
-function sync(){
-  $('width').value=state.width;$('height').value=state.height;
-  document.querySelectorAll('[data-ratio]').forEach(b=>{b.classList.toggle('active',b.dataset.ratio===state.ratio);b.setAttribute('aria-pressed',String(b.dataset.ratio===state.ratio));});
-  $('ratio-note').textContent=state.ratio==='free'?'自由比率：縦横を個別に入力できます。':'横幅または縦幅を変更すると、もう一方を自動計算します。';
-  $('thirds-check').checked=state.thirds;$('center-check').checked=state.center;$('safe-check').checked=state.safe;
-  $('thirds').style.display=state.thirds?'':'none';$('centers').style.display=state.center?'':'none';$('safebox').style.display=state.safe?'':'none';
-  $('frame').style.aspectRatio=`${state.width} / ${state.height}`;
-  $('ratio-display').textContent=state.ratio==='free'?'自由比率':state.ratio;
-  $('size-label').textContent=`${fmt(state.width)} × ${fmt(state.height)} px`;
-  $('x-lines').textContent=`${fmt(state.width/3)} / ${fmt(state.width*2/3)}`;
-  $('y-lines').textContent=`${fmt(state.height/3)} / ${fmt(state.height*2/3)}`;
-  $('megapixels').textContent=`${(state.width*state.height/1e6).toFixed(2)} MP`;
-  $('pixel-count').textContent=`${fmt(state.width*state.height)} px`;
-  const divisor=gcd(state.width,state.height);
-  $('actual-ratio').textContent=`${state.width/divisor}:${state.height/divisor}`;
-  layoutPreview();
-  try{localStorage.setItem('framecalc-v1',JSON.stringify(state));}catch(_){}
+const $=id=>document.getElementById(id), $$=sel=>Array.from(document.querySelectorAll(sel));
+const defaults={width:1920,height:1080,ratio:'16:9',thirds:true,assist:false,center:false,safe:false,xPos:.5,yPos:.5,psdInclude:true,axis:'horizontal',fov:45,focal:43.4558,lastCamera:'fov', settings:{defaultRatio:'9:16',color:'#ffffff',lineWidth:2,opacity:75,assistOffset:5,assistTarget:'upper',jpegQuality:.92,sensorWidth:36,sensorHeight:24,sensorFit:'HORIZONTAL'}};
+let s=structuredClone(defaults);let priorSettings=false;
+try{const old=JSON.parse(localStorage.getItem('framecalc-v1')||'null'); if(old&&!localStorage.getItem('framecalc-v11')){priorSettings=true;for(const k of ['width','height','ratio','thirds','center','safe'])if(old[k]!==undefined)s[k]=old[k];}}catch(_){ }
+try{const saved=JSON.parse(localStorage.getItem('framecalc-v11')||'null');if(saved){priorSettings=true;for(const k of Object.keys(defaults)){if(k!=='settings' && Object.hasOwn(saved,k))s[k]=saved[k];}s.settings={...defaults.settings,...(saved.settings||{})}}}catch(_){ }
+if(!priorSettings){s.ratio='9:16';s.width=1080;s.height=1920;}
+const fmt=(x,d=2)=>Number(x).toLocaleString('ja-JP',{maximumFractionDigits:d});
+const valid=(n)=>Number.isFinite(Number(n))&&Number(n)>0;
+const clampDim=n=>Math.max(1,Math.min(16384,Math.round(Number(n)||1)));
+const ratios={'16:9':16/9,'9:16':9/16,'4:3':4/3,'3:2':3/2,'1:1':1};
+const msg=text=>{const el=$('toast');el.textContent=text;el.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(()=>el.classList.remove('show'),2800)};
+function persist(){try{localStorage.setItem('framecalc-v11',JSON.stringify(s))}catch(_){}}
+let img=null,imgURL=null,imgName='image',imgW=0,imgH=0;
+let hasImage=()=>!!img&&!img.hidden&&imgW>0&&imgH>0;
+function crop(){if(!hasImage())return null;const scale=Math.max(s.width/imgW,s.height/imgH);const cw=Math.min(imgW,s.width/scale),ch=Math.min(imgH,s.height/scale);return {scale,cw,ch,x:(imgW-cw)*s.xPos,y:(imgH-ch)*s.yPos};}
+function activeAspect(){const keys=Object.keys(ratios);return keys.find(k=>Math.abs(ratios[k]-s.width/s.height)<.00015)||'自由';}
+function applyGuides(){const g=s.settings;const gridStyle=`${g.color}`;const alpha=g.opacity/100;const strokeWidth=g.lineWidth;
+const set=(id,on,color=gridStyle,width=strokeWidth)=>{const e=$(id);e.style.display=on?'':'none';e.setAttribute('stroke',color);e.setAttribute('stroke-width',width);e.setAttribute('stroke-opacity',alpha)};
+set('thirds',s.thirds);set('assist',s.assist,gridStyle,Math.max(.8,strokeWidth*.8));set('centers',s.center,'#ffd894',strokeWidth);set('safebox',s.safe,'#70ead2',strokeWidth);
+const a=g.assistOffset*10;[['assist-up1',1000/3-a],['assist-up2',1000/3+a],['assist-low1',2000/3-a],['assist-low2',2000/3+a]].forEach(([id,y])=>{$(id).setAttribute('y1',y);$(id).setAttribute('y2',y)});
+$('assist-up1').style.display=$('assist-up2').style.display=(g.assistTarget==='upper'||g.assistTarget==='both')?'':'none';
+$('assist-low1').style.display=$('assist-low2').style.display=(g.assistTarget==='lower'||g.assistTarget==='both')?'':'none';}
+function layoutPreview(){const area=$('preview-area');if(!area||$('images-panel').hidden)return;const availW=Math.max(100,area.clientWidth-8);const availH=Math.min(Math.max(window.innerHeight*.58,230),window.innerWidth>=850?620:410);const r=s.width/s.height;const w=Math.min(availW,availH*r);const frame=$('frame');frame.style.width=Math.max(1,w)+'px';frame.style.height=Math.max(1,w/r)+'px';area.style.minHeight=(window.innerWidth>=850?'380':'245')+'px';}
+function syncImage(){if(!hasImage()){['source-size','scale-value','crop-size'].forEach(id=>$(id).textContent='—');$('source-state').textContent='画像未読込';$('crop-note').textContent='画像を読み込むと倍率と切り出し位置が自動計算されます。';}else{const c=crop();$('source-size').textContent=`${fmt(imgW,0)} × ${fmt(imgH,0)}`;$('scale-value').textContent=fmt(c.scale*100,2)+'%';$('crop-size').textContent=`${fmt(c.cw,0)} × ${fmt(c.ch,0)}`;$('source-state').textContent='画像読込済み';$('crop-note').textContent=`元画像上の切り出し始点 X=${fmt(c.x,1)}, Y=${fmt(c.y,1)} px／切り出し時に画像を変形しません。`;
+$('reference-image').style.objectPosition=`${s.xPos*100}% ${s.yPos*100}%`;
 }
-function layoutPreview(){
-  const area=$('preview-area');const availW=Math.max(80,area.clientWidth-8);
-  const availH=Math.min(Math.max(window.innerHeight*.38,200),340);
-  const r=state.width/state.height;
-  const width=Math.min(availW,availH*r);
-  $('frame').style.width=`${Math.max(1,width)}px`;
-  $('frame').style.height=`${Math.max(1,width/r)}px`;
-  area.style.minHeight=`${Math.max(165,Math.min(300,availH))}px`;
+const c=crop();const dx=c&&(imgW-c.cw)>0.01,dy=c&&(imgH-c.ch)>0.01;
+$$('.pos').forEach(b=>{const ax=b.dataset.axis;b.classList.toggle('active',Number(b.dataset.pos)===s[ax+'Pos']);b.disabled=!c||(ax==='x'?!dx:!dy);});
+$('remove-image').disabled=!hasImage();$('save-png').disabled=!hasImage();$('save-jpeg').disabled=!hasImage();}
+function sync(){s.width=clampDim(s.width);s.height=clampDim(s.height);if(document.activeElement!==$('width'))$('width').value=s.width;if(document.activeElement!==$('height'))$('height').value=s.height;
+$$('[data-ratio]').forEach(b=>{b.classList.toggle('active',b.dataset.ratio===s.ratio);b.setAttribute('aria-pressed',String(b.dataset.ratio===s.ratio))});
+$('ratio-note').textContent=s.ratio==='free'?'自由比率：縦横を個別に入力できます。':'比率を固定して縦横を自動計算します。';
+$('frame').style.aspectRatio=`${s.width}/${s.height}`;$('aspect-label').textContent=activeAspect();$('size-label').textContent=`${fmt(s.width,0)} × ${fmt(s.height,0)} px`;
+$('target-size').textContent=`${fmt(s.width,0)} × ${fmt(s.height,0)}`;
+$('x-lines').textContent=`${fmt(s.width/3)} / ${fmt(s.width*2/3)}`;$('y-lines').textContent=`${fmt(s.height/3)} / ${fmt(s.height*2/3)}`;
+const g=s.settings;let lines=[];if(g.assistTarget==='upper'||g.assistTarget==='both')lines.push(s.height*(1/3-g.assistOffset/100),s.height*(1/3+g.assistOffset/100));if(g.assistTarget==='lower'||g.assistTarget==='both')lines.push(s.height*(2/3-g.assistOffset/100),s.height*(2/3+g.assistOffset/100));$('assist-lines').textContent=lines.length?lines.map(v=>fmt(v,1)).join(' / '):'—';
+$('pixel-count').textContent=fmt(s.width*s.height,0)+' px';
+for(const [key,id] of [['thirds','thirds-check'],['assist','assist-check'],['center','center-check'],['safe','safe-check']])$(id).checked=s[key];
+$('psd-include-image').checked=s.psdInclude;syncImage();applyGuides();layoutPreview();updateCameraFromLast();persist();}
+function setSize(dim,raw){if(!valid(raw))return;const n=clampDim(raw);s[dim]=n;if(s.ratio!=='free'){const r=ratios[s.ratio];if(dim==='width')s.height=clampDim(n/r);else s.width=clampDim(n*r);}sync()}
+for(const dim of ['width','height']){$(dim).addEventListener('input',e=>setSize(dim,e.target.value));$(dim).addEventListener('blur',sync);}
+$$('[data-ratio]').forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.ratio;if(next!=='free'){const r=ratios[next],old=s.width/s.height;if((r>1&&old<1)||(r<1&&old>1))[s.width,s.height]=[s.height,s.width];s.height=clampDim(s.width/r);}s.ratio=next;sync()}));
+$$('[data-size]').forEach(b=>b.addEventListener('click',()=>{const [w,h]=b.dataset.size.split(',').map(Number);s.width=w;s.height=h;s.ratio=activeAspect();if(s.ratio==='自由')s.ratio='free';sync()}));
+$('swap').addEventListener('click',()=>{[s.width,s.height]=[s.height,s.width];s.ratio=activeAspect();if(s.ratio==='自由')s.ratio='free';sync()});
+for(const [key,id] of [['thirds','thirds-check'],['assist','assist-check'],['center','center-check'],['safe','safe-check']])$(id).addEventListener('change',e=>{s[key]=e.target.checked;sync()});
+$$('.pos').forEach(b=>b.addEventListener('click',()=>{s[b.dataset.axis+'Pos']=Number(b.dataset.pos);sync()}));
+$('psd-include-image').addEventListener('change',e=>{s.psdInclude=e.target.checked;persist()});
+async function loadImage(file){if(!file)return;const supported=/^image\/(png|jpeg|webp|gif|bmp|avif|heic|heif)$/i.test(file.type)||/\.(png|jpe?g|webp|gif|bmp|avif|heic|heif)$/i.test(file.name||'');if(!supported){msg('PNG / JPEG / WebPなどの画像を選択してください');return;}
+const u=URL.createObjectURL(file),tmp=new Image();tmp.onload=()=>{if(imgURL)URL.revokeObjectURL(imgURL);imgURL=u;img=tmp;imgW=tmp.naturalWidth;imgH=tmp.naturalHeight;imgName=(file.name||'clipboard-image').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,50)||'image';const el=$('reference-image');el.src=u;el.hidden=false;$('watermark').hidden=true;sync();msg(`画像を読み込みました（${imgW} × ${imgH}）`)};tmp.onerror=()=>{URL.revokeObjectURL(u);msg('この画像形式はブラウザで開けません')};tmp.src=u;}
+$('choose-image').addEventListener('click',()=>$('image-file').click());$('image-file').addEventListener('change',e=>{loadImage(e.target.files?.[0]);e.target.value=''});
+$('remove-image').addEventListener('click',()=>{if(imgURL)URL.revokeObjectURL(imgURL);imgURL=null;img=null;imgW=imgH=0;const el=$('reference-image');el.hidden=true;el.removeAttribute('src');$('watermark').hidden=false;sync()});
+const upload=$('upload');function prevent(e){e.preventDefault();e.stopPropagation()}
+window.addEventListener('dragover',e=>{if(e.dataTransfer?.types?.includes('Files'))prevent(e)});window.addEventListener('drop',e=>{if(e.dataTransfer?.files?.length){prevent(e);upload.classList.remove('drag');loadImage(Array.from(e.dataTransfer.files).find(f=>f.type.startsWith('image/'))||e.dataTransfer.files[0])}});
+upload.addEventListener('dragenter',e=>{prevent(e);upload.classList.add('drag')});upload.addEventListener('dragleave',e=>{prevent(e);if(!upload.contains(e.relatedTarget))upload.classList.remove('drag')});upload.addEventListener('dragover',prevent);
+document.addEventListener('paste',e=>{const t=e.target;if(t?.closest?.('input,textarea,[contenteditable]'))return;const items=e.clipboardData?.items||[];for(const item of items)if(item.type.startsWith('image/')){const f=item.getAsFile();if(f){prevent(e);loadImage(f);break;}}});
+function blankCanvas(){const c=document.createElement('canvas');c.width=s.width;c.height=s.height;return c}
+function drawImageTo(c){if(!hasImage())return;const p=crop(),ctx=c.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,p.x,p.y,p.cw,p.ch,0,0,s.width,s.height);}
+function hexRGB(str){const v=str.replace('#','');return [0,2,4].map(i=>parseInt(v.slice(i,i+2),16));}
+function guideCanvas(){const c=blankCanvas(),ctx=c.getContext('2d');const g=s.settings,off=g.assistOffset/100;ctx.lineWidth=g.lineWidth;ctx.globalAlpha=g.opacity/100;const segment=(x,y,X,Y)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(X,Y);ctx.stroke()};ctx.strokeStyle=g.color;
+if(s.thirds){for(const n of [1,2]){segment(s.width*n/3,0,s.width*n/3,s.height);segment(0,s.height*n/3,s.width,s.height*n/3)}}
+if(s.assist){ctx.save();ctx.lineWidth=Math.max(.8,g.lineWidth*.8);ctx.setLineDash([g.lineWidth*3,g.lineWidth*3]);const ys=[];if(g.assistTarget==='upper'||g.assistTarget==='both')ys.push(1/3-off,1/3+off);if(g.assistTarget==='lower'||g.assistTarget==='both')ys.push(2/3-off,2/3+off);for(const y of ys)segment(0,s.height*y,s.width,s.height*y);ctx.restore()}
+if(s.center){ctx.save();ctx.strokeStyle='#ffd894';ctx.setLineDash([g.lineWidth*4,g.lineWidth*3]);segment(s.width/2,0,s.width/2,s.height);segment(0,s.height/2,s.width,s.height/2);ctx.restore()}
+if(s.safe){ctx.strokeStyle='#70ead2';ctx.strokeRect(s.width*.05,s.height*.05,s.width*.9,s.height*.9)}
+return c;}
+function checkExport(psd=false){const pix=s.width*s.height,limit=psd?(navigator.maxTouchPoints>1?4500000:9000000):36000000;if(pix>limit){msg(`解像度が大きすぎます。${psd?'PSDは':'画像は'} ${fmt(limit/1e6)} MP以内にしてください`);return false;}return true;}
+function download(blob,filename){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+function saveCanvas(canvas,format,name,quality){canvas.toBlob(b=>{if(b){download(b,name);msg('保存ファイルを作成しました')}else msg('画像の書き出しに失敗しました')},format,quality)}
+$('save-png').addEventListener('click',()=>{if(!hasImage()||!checkExport())return;const c=blankCanvas();drawImageTo(c);saveCanvas(c,'image/png',`framecalc-${imgName}-${s.width}x${s.height}.png`)});
+$('save-jpeg').addEventListener('click',()=>{if(!hasImage()||!checkExport())return;const c=blankCanvas();c.getContext('2d').fillStyle='#fff';c.getContext('2d').fillRect(0,0,s.width,s.height);drawImageTo(c);saveCanvas(c,'image/jpeg',`framecalc-${imgName}-${s.width}x${s.height}.jpg`,s.settings.jpegQuality)});
+$('save-guide').addEventListener('click',()=>{if(!checkExport())return;saveCanvas(guideCanvas(),'image/png',`framecalc-guides-${s.width}x${s.height}.png`)});
+/* Small, self-contained RGB 8-bit PSD writer (raw channel data) to keep offline support. */
+class Binary{constructor(){this.parts=[];this.length=0}add(a){this.parts.push(a);this.length+=a.length}bytes(...x){this.add(Uint8Array.from(x))}u16(v){this.bytes((v>>>8)&255,v&255)}i16(v){this.u16(v&65535)}u32(v){this.bytes((v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255)}i32(v){this.u32(v>>>0)}str(v){this.add(new TextEncoder().encode(v))}finish(){const out=new Uint8Array(this.length);let at=0;for(const p of this.parts){out.set(p,at);at+=p.length}return out}}
+function psdChannel(imageData,idx,width,height){const data=imageData.data,n=width*height,ret=new Uint8Array(n+2);ret[0]=0;ret[1]=0;for(let k=0,j=idx;k<n;k++,j+=4)ret[k+2]=data[j];return ret}
+function writePSD(layers,w,h){const lRecs=new Binary(),lData=new Binary();lRecs.i16(layers.length);
+for(const layer of layers){const data=layer.canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h);lRecs.i32(0);lRecs.i32(0);lRecs.i32(h);lRecs.i32(w);lRecs.u16(4);
+const chans=[[-1,3],[0,0],[1,1],[2,2]];for(const [id,ix] of chans){lRecs.i16(id);lRecs.u32(2+w*h)}lRecs.str('8BIM');lRecs.str('norm');lRecs.bytes(255,0,0,0);
+const nameBytes=new TextEncoder().encode(layer.name);const bytes=nameBytes.slice(0,255);const pName=new Binary();pName.bytes(bytes.length);pName.add(bytes);while(pName.length%4!==0)pName.bytes(0);
+lRecs.u32(8+pName.length);lRecs.u32(0);lRecs.u32(0);lRecs.add(pName.finish());
+for(const [_,ix] of chans)lData.add(psdChannel(data,ix,w,h));}
+const layersInfo=new Binary();layersInfo.add(lRecs.finish());layersInfo.add(lData.finish());if(layersInfo.length%2)layersInfo.bytes(0);
+const layerMask=new Binary();layerMask.u32(layersInfo.length);layerMask.add(layersInfo.finish());layerMask.u32(0);
+const out=new Binary();out.str('8BPS');out.u16(1);out.bytes(0,0,0,0,0,0);out.u16(4);out.u32(h);out.u32(w);out.u16(8);out.u16(3);out.u32(0);out.u32(0);out.u32(layerMask.length);out.add(layerMask.finish());
+// Composite image data in RGBA planar order. Recreate layered appearance for thumbnails.
+const merged=document.createElement('canvas');merged.width=w;merged.height=h;const ctx=merged.getContext('2d');for(let i=layers.length-1;i>=0;i--)ctx.drawImage(layers[i].canvas,0,0);const md=ctx.getImageData(0,0,w,h);
+out.u16(0);for(const ix of [0,1,2,3]){const p=psdChannel(md,ix,w,h);out.add(p.subarray(2))}return out.finish();}
+$('save-psd').addEventListener('click',()=>{if(!checkExport(true))return;if(!s.thirds&&!s.assist&&!s.center&&!s.safe){msg('PSD用のガイド線を少なくとも1つ有効にしてください');return;}
+$('save-psd').disabled=true;setTimeout(()=>{try{const layers=[{name:'Composition Guides',canvas:guideCanvas()}];if(hasImage()&&s.psdInclude){const c=blankCanvas();drawImageTo(c);layers.push({name:'Cropped Image',canvas:c})}const bytes=writePSD(layers,s.width,s.height);download(new Blob([bytes],{type:'image/vnd.adobe.photoshop'}),`framecalc-${s.width}x${s.height}.psd`);msg('レイヤー付きPSDを保存しました')}catch(e){console.error(e);msg('PSDの作成に失敗しました（メモリ不足の可能性）')}finally{$('save-psd').disabled=false}},40)});
+function report(){let t=`FrameCalc v1.1\n出力: ${s.width} × ${s.height} px\n比率: ${activeAspect()}\n縦の3分割 X: ${fmt(s.width/3)}, ${fmt(s.width*2/3)} px\n横の3分割 Y: ${fmt(s.height/3)}, ${fmt(s.height*2/3)} px\n補助線Y: ${$('assist-lines').textContent} px`;if(hasImage()){const c=crop();t+=`\n元画像: ${imgW} × ${imgH} px\n倍率: ${fmt(c.scale*100,2)}%\n切り出し範囲: x=${fmt(c.x)}, y=${fmt(c.y)}, ${fmt(c.cw)} × ${fmt(c.ch)} px`;}return t;}
+$('copy-report').addEventListener('click',async()=>{try{if(navigator.clipboard&&isSecureContext)await navigator.clipboard.writeText(report());else{const ta=document.createElement('textarea');ta.value=report();document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw Error('cannot copy');ta.remove()}msg('計算結果をコピーしました')}catch(e){msg('コピーできませんでした。HTTPSで開いてください')}});
+/* Camera geometry: Blender sensor fit defines effective film dimensions. */
+function effectiveFit(){const fit=s.settings.sensorFit;if(fit==='AUTO')return s.width>=s.height?'HORIZONTAL':'VERTICAL';return fit}
+function filmDimensions(){const a=s.width/s.height;return effectiveFit()==='HORIZONTAL'?{w:s.settings.sensorWidth,h:s.settings.sensorWidth/a}:{w:s.settings.sensorHeight*a,h:s.settings.sensorHeight}}
+function cameraDimension(){const f=filmDimensions();return s.axis==='horizontal'?f.w:f.h}
+function updateCameraFromLast(){const d=cameraDimension();if(!valid(d))return;if(s.lastCamera==='focal'){s.focal=Math.max(.1,Math.min(3000,Number(s.focal)||50));s.fov=2*Math.atan(d/(2*s.focal))*180/Math.PI;}else{s.fov=Math.max(1,Math.min(120,Number(s.fov)||45));s.focal=d/(2*Math.tan(s.fov*Math.PI/360));}
+if(document.activeElement!==$('camera-fov'))$('camera-fov').value=Number(s.fov).toFixed(3);if(document.activeElement!==$('camera-focal'))$('camera-focal').value=Number(s.focal).toFixed(3);$('fov-axis').value=s.axis;
+$('camera-aspect').textContent=`${s.width} × ${s.height} (${activeAspect()})`;
+const f=filmDimensions(),hv=2*Math.atan(f.w/(2*s.focal))*180/Math.PI,vv=2*Math.atan(f.h/(2*s.focal))*180/Math.PI;
+$('camera-result-label').textContent=s.lastCamera==='focal'?'SketchUpの画角':'Blenderの焦点距離';$('camera-result').textContent=s.lastCamera==='focal'?`${fmt(s.fov,3)} °`:`${fmt(s.focal,3)} mm`;
+$('camera-details').textContent=`水平画角 ${fmt(hv,3)}° / 垂直画角 ${fmt(vv,3)}°\nSensor Fit: ${effectiveFit()} ／ センサー: ${fmt(s.settings.sensorWidth)} × ${fmt(s.settings.sensorHeight)} mm`;
 }
-function changeDim(dim){
-  const raw=$(dim).value;
-  if(!finite(raw))return;
-  const n=clamp(raw);
-  state[dim]=n;
-  const ratio=ratioNum(state.ratio);
-  if(ratio){if(dim==='width')state.height=clamp(n/ratio);else state.width=clamp(n*ratio);}
-  sync();
-}
-for(const dim of ['width','height']){
-  $(dim).addEventListener('input',()=>changeDim(dim));
-  $(dim).addEventListener('blur',sync);
-}
-document.querySelectorAll('[data-ratio]').forEach(btn=>btn.addEventListener('click',()=>{
- const r=btn.dataset.ratio;
- if(r!=='free'){
-   const old=state.width/state.height,newR=ratioNum(r);
-   if((old>1&&newR<1)||(old<1&&newR>1)){[state.width,state.height]=[state.height,state.width];}
-   state.height=clamp(state.width/newR);
- }
- state.ratio=r;sync();
-}));
-document.querySelectorAll('[data-size]').forEach(btn=>btn.addEventListener('click',()=>{
-  const [w,h]=btn.dataset.size.split(',').map(Number);state.width=w;state.height=h;
-  const matched=['16:9','9:16','4:3','3:2','1:1'].find(r=>Math.abs(ratioNum(r)-w/h)<.0002);
-  state.ratio=matched||'free';sync();
-}));
-$('swap').addEventListener('click',()=>{
- [state.width,state.height]=[state.height,state.width];
- const map={'16:9':'9:16','9:16':'16:9','4:3':'free','3:2':'free','1:1':'1:1','free':'free'};
- state.ratio=map[state.ratio];sync();
-});
-[['thirds-check','thirds'],['center-check','center'],['safe-check','safe']].forEach(([id,key])=>$(id).addEventListener('change',e=>{state[key]=e.target.checked;sync();}));
-$('image-file').addEventListener('change',e=>{
- const file=e.target.files&&e.target.files[0];if(!file)return;
- if(!file.type.startsWith('image/')){toast('画像ファイルを選択してください');return;}
- if(previewURL)URL.revokeObjectURL(previewURL);
- previewURL=URL.createObjectURL(file);
- const img=$('reference-image');img.onload=()=>{img.hidden=false;$('frame-tag').style.display='none';};
- img.onerror=()=>toast('画像を読み込めませんでした');img.src=previewURL;
- $('remove-image').hidden=false;
-});
-$('remove-image').addEventListener('click',()=>{
- $('reference-image').hidden=true;$('reference-image').removeAttribute('src');$('image-file').value='';
- if(previewURL)URL.revokeObjectURL(previewURL);previewURL=null;$('frame-tag').style.display='';$('remove-image').hidden=true;
-});
-function resultText(){const w=state.width,h=state.height,d=gcd(w,h);return `FrameCalc\n解像度: ${w} × ${h} px\nアスペクト比: ${w/d}:${h/d}\n縦3分割(X): ${fmt(w/3)}, ${fmt(w*2/3)} px\n横3分割(Y): ${fmt(h/3)}, ${fmt(h*2/3)} px\n画素数: ${fmt(w*h)} px (${(w*h/1e6).toFixed(2)} MP)`;}
-$('copy').addEventListener('click',async()=>{
- const value=resultText();
- try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value);}else{const ta=document.createElement('textarea');ta.value=value;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw Error('copy');ta.remove();}toast('計算結果をコピーしました');}
- catch(_){toast('コピーできません。HTTPSで開いてください');}
-});
-$('export').addEventListener('click',()=>{
- const w=state.width,h=state.height;
- if(w*h>40000000){toast('画像が大きすぎます（上限4000万画素）');return;}
- if(!state.thirds&&!state.center&&!state.safe){toast('表示するガイドを選択してください');return;}
- try{
-   const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
-   const scale=Math.max(1,Math.round(Math.min(w,h)/720));
-   const line=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
-   if(state.thirds){ctx.strokeStyle='rgba(255,255,255,.86)';ctx.lineWidth=scale;line(w/3,0,w/3,h);line(w*2/3,0,w*2/3,h);line(0,h/3,w,h/3);line(0,h*2/3,w,h*2/3);}
-   if(state.center){ctx.strokeStyle='#ffd38e';ctx.lineWidth=scale;ctx.setLineDash([8*scale,6*scale]);line(w/2,0,w/2,h);line(0,h/2,w,h/2);ctx.setLineDash([]);}
-   if(state.safe){ctx.strokeStyle='#71f8d9';ctx.lineWidth=scale;ctx.strokeRect(w*.05,h*.05,w*.9,h*.9);}
-   canvas.toBlob(blob=>{
-     if(!blob){toast('PNGを作成できませんでした');return;}
-     const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=`framecalc-guide-${w}x${h}.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),15000);toast('透明ガイドPNGを作成しました');
-   },'image/png');
- }catch(e){toast('この解像度では書き出せませんでした');}
-});
-window.addEventListener('resize',layoutPreview);
-sync();
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+$('camera-fov').addEventListener('input',e=>{if(valid(e.target.value)){s.fov=Number(e.target.value);s.lastCamera='fov';updateCameraFromLast();persist()}});
+$('camera-focal').addEventListener('input',e=>{if(valid(e.target.value)){s.focal=Number(e.target.value);s.lastCamera='focal';updateCameraFromLast();persist()}});
+$('fov-axis').addEventListener('change',e=>{s.axis=e.target.value;updateCameraFromLast();persist()});
+for(const id of ['camera-fov','camera-focal'])$(id).addEventListener('blur',()=>updateCameraFromLast());
+$$('[data-tab]').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.tab;$$('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('images-panel').hidden=target!=='images';$('camera-panel').hidden=target!=='camera';if(target==='images')requestAnimationFrame(layoutPreview)}));
+const options={ 'guide-color':'color','guide-width':'lineWidth','guide-opacity':'opacity','assist-offset':'assistOffset','assist-target':'assistTarget','default-ratio':'defaultRatio','jpeg-quality':'jpegQuality','sensor-width':'sensorWidth','sensor-height':'sensorHeight','sensor-fit':'sensorFit'};
+function showSettings(){for(const [id,k] of Object.entries(options))$(id).value=s.settings[k];$('opacity-label').textContent=s.settings.opacity+'%';$('settings').hidden=false}
+$('open-settings').addEventListener('click',showSettings);$('close-settings').addEventListener('click',()=>$('settings').hidden=true);$('settings').addEventListener('click',e=>{if(e.target===$('settings'))$('settings').hidden=true});
+$('guide-opacity').addEventListener('input',e=>$('opacity-label').textContent=e.target.value+'%');
+function readSettings(){for(const [id,k] of Object.entries(options)){const el=$(id);s.settings[k]=(['lineWidth','opacity','assistOffset','jpegQuality','sensorWidth','sensorHeight'].includes(k)?Number(el.value):el.value)}s.settings.assistOffset=Math.min(15,Math.max(0,s.settings.assistOffset||0));s.settings.sensorWidth=Math.max(1,s.settings.sensorWidth||36);s.settings.sensorHeight=Math.max(1,s.settings.sensorHeight||24)}
+$('save-settings').addEventListener('click',()=>{const before=s.settings.defaultRatio;readSettings();if(before!==s.settings.defaultRatio){const r=ratios[s.settings.defaultRatio];const longer=Math.max(s.width,s.height);if(r>=1){s.width=longer;s.height=clampDim(longer/r);}else{s.height=longer;s.width=clampDim(longer*r);}s.ratio=s.settings.defaultRatio;}$('settings').hidden=true;sync();msg('端末内に設定を保存しました')});
+$('reset-settings').addEventListener('click',()=>{s.settings=structuredClone(defaults.settings);showSettings();msg('初期値を表示しました。保存で確定します')});
+window.addEventListener('resize',()=>requestAnimationFrame(layoutPreview));
+sync();if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
 })();
 </script>
-</body>
-</html>
+</body></html>
